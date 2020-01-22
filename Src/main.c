@@ -50,8 +50,8 @@ UART_HandleTypeDef huart3;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128
+  .priority = (osPriority_t) osPriorityHigh,
+  .stack_size = 500
 };
 /* USER CODE BEGIN PV */
 
@@ -327,22 +327,21 @@ void StartDefaultTask(void *argument)
 	netconn_bind(conn, IP4_ADDR_ANY, 2500);
 
   /* Infinite loop */
-	for(;;)
-	{
-		//Waiting for a new message
-	   ;
+	for(;;){
 	    //If no error, we return the same message
-	    while (( err = netconn_recv(conn, &buf)) == ERR_OK) {
-	    	memset(buffer,'0',4096); //Cleaning the buffer variable
+	    while (netconn_recv(conn, &buf) == ERR_OK) {
 	    	addr = netbuf_fromaddr(buf);// Saving the source address
 	    	port = netbuf_fromport(buf);//Saving the port number
-	    	netconn_connect(conn, ip4addr_ntoa(&buf->addr), port);//Connecting to the client
+        
+        memset(buffer,'0',4096); //Cleaning the buffer variable
 	    	netbuf_copy(buf, buffer, buf->p->tot_len);
 	    	buffer[buf->p->tot_len] = '\0';
 	    	printf("data: %s\r\n",buffer); //Received data
-	    	netconn_sendto(conn, buf,addr,port); //Sending back to the source
 
+        // netconn_connect(conn, ip4addr_ntoa(&buf->addr), port); //Connecting to the client
+	    	netconn_sendto(conn, buf, addr, port); //Sending back to the source
 	    	netbuf_delete(buf);
+
 	    }
 		osDelay(100);
 		printf(".\r\n");
