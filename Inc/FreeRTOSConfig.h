@@ -60,7 +60,7 @@
 #define configTICK_RATE_HZ                       ((TickType_t)1000)
 #define configMAX_PRIORITIES                     ( 56 )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
-#define configTOTAL_HEAP_SIZE                    ((size_t)40000)
+#define configTOTAL_HEAP_SIZE                    ((size_t)50000)
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configUSE_TRACE_FACILITY                 1
 #define configUSE_16_BIT_TICKS                   0
@@ -96,7 +96,7 @@ to exclude the API function. */
 #define INCLUDE_eTaskGetState               1
 
 #define configUSE_POSIX_ERRNO               1
-
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
 /* 
  * The CMSIS-RTOS V2 FreeRTOS wrapper is dependent on the heap implementation used
  * by the application thus the correct define need to be enabled below

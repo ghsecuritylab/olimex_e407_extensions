@@ -35,6 +35,7 @@
 #include <ip_addr.h>
 
 #include "FreeRTOS.h"
+#include "task.h"
 
 /* USER CODE END Includes */
 
@@ -59,8 +60,8 @@ UART_HandleTypeDef huart3;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 3000
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 4*500
 };
 /* USER CODE BEGIN PV */
 
@@ -76,7 +77,7 @@ void StartDefaultTask(void *argument);
 #define BUFSIZE 4096
 char buffer[BUFSIZE];
 extern struct netif gnetif;
-extern appMain;
+// extern appMain;
 
 /* USER CODE END PFP */
 
@@ -307,7 +308,7 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   printf("Ethernet Initialization \r\n");
 	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_SET);
-	MX_LWIP_Init();
+	// MX_LWIP_Init();
 
 	//Waiting for an IP
 	while(gnetif.ip_addr.addr==0){
@@ -319,182 +320,34 @@ void StartDefaultTask(void *argument)
 	printf("IP: %s\r\n",ip4addr_ntoa(&gnetif.ip_addr));
 
 
-  // WORKING UDP SERVER
-  // static struct netconn *conn;
-	// static struct netbuf *buf;
-	// static ip_addr_t *addr;
-	// static unsigned short port;
-	// void *data;
-	// err_t err;
-  // /* init code for LWIP */
-
-
-	// conn = netconn_new(NETCONN_UDP);
-	// netconn_bind(conn, IP4_ADDR_ANY, 2500);
-
-  // /* Infinite loop */
-	// for(;;){
-	//     //If no error, we return the same message
-	//     while (netconn_recv(conn, &buf) == ERR_OK) {
-	//     	addr = netbuf_fromaddr(buf);// Saving the source address
-	//     	port = netbuf_fromport(buf);//Saving the port number
-        
-  //      memset(buffer,'0',4096); //Cleaning the buffer variable
-	//     	netbuf_copy(buf, buffer, buf->p->tot_len);
-	//     	buffer[buf->p->tot_len] = '\0';
-
-  //       char aux[100];
-  //       ipaddr_ntoa_r(addr,aux,100);
-  //       printf("data from %s: %s\r\n",aux,buffer); //Received data
-
-  //       // netconn_connect(conn, ip4addr_ntoa(&buf->addr), port); //Connecting to the client
-  //       netconn_sendto(conn, buf, addr, port); //Sending back to the source
-	//     	netbuf_delete(buf);
-	//     }
-	// 	osDelay(100);
-	// 	printf(".\r\n");
-	// }
-	// printf("-\r\n");
-
-  // ------------ WORKING UDP CLIENT nc -u -l 0.0.0.0 -p 2600
-  // static struct netconn *conn;
-	// conn = netconn_new(NETCONN_UDP);
-	// netconn_bind(conn, IP4_ADDR_ANY, 3500);
-  // const ip_addr_t addr = IPADDR4_INIT_BYTES(192, 168, 1, 79);
-  // u16_t port = 2600;
-
-
-  // while(1){
-  // vTaskDelay(2000);
-
-  // uxrUDPTransport transport;
-  // uxrUDPPlatform udp_platform;
-
-  // if(!uxr_init_udp_transport(&transport, &udp_platform, UXR_IPv4, "192.168.1.79", "8888")){
-  //   printf("Error at create transport.\n");
-  //   return 1;
-  // }
-  //   char *mem;
-  //   struct netbuf *buf;
-  //   buf = netbuf_new(); /* create a new netbuf */
-  //   char data[] = "HOLAAAAA\n";
-  //   mem = (char *)netbuf_alloc(buf, strlen(data));
-  //   strncpy(mem, data, strlen(data));
-  //   // netbuf_copy(buf, data, strlen(data));
-  
-  //   netconn_sendto(conn, buf, &addr, port); //Sending back to the source
-      
-  //   netbuf_delete(buf); /* deallocate netbuf */
-
-  //   osDelay(1000);
-  // }
-
-  // WORKING POSIX CLIENT
-  // char buffer[100]; 
-  // char *message = "Hello Server\n"; 
-  // int sockfd, n; 
-  // struct sockaddr_in servaddr; 
-    
-  // // clear servaddr 
-  // bzero(&servaddr, sizeof(servaddr)); 
-  // servaddr.sin_addr.s_addr = inet_addr("192.168.1.115"); 
-  // servaddr.sin_port = htons(2600); 
-  // servaddr.sin_family = AF_INET; 
-    
-  // // create datagram socket 
-  // sockfd = socket(AF_INET, SOCK_DGRAM, 0); 
-    
-  // // connect to server 
-  // if(connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) 
-  // { 
-  //     printf("\n Error : Connect Failed \n"); 
-  //     exit(0); 
-  // } 
-
-  // // request to send datagram 
-  // // no need to specify server address in sendto 
-  // // connect stores the peers IP and port 
-
-  // struct timeval tv;
-  // tv.tv_sec = 0;
-  // tv.tv_usec = 500000;
-  // setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-  // while (1){
-  //   sendto(sockfd, message, strlen(message), 0, (struct sockaddr*)&servaddr, sizeof(servaddr)); 
-  //   char rx[100];
-  //   memset(rx,0,100);
-  //   if(recv(sockfd,&rx,100,0) > 0){
-  //     printf("Received %s\n",rx);
-  //   }else{
-  //     printf("Nothing rx\n");
-  //   }
-  // }
-  
-  // // close the descriptor 
-  // close(sockfd); 
-
-  
-  // WORKING POSIX SERVER
- 
-  //   int sockfd; 
-  //   char buffer[100]; 
-  //   char *hello = "Hello from server"; 
-  //   struct sockaddr_in servaddr, cliaddr; 
-      
-  //   // Creating socket file descriptor 
-  //   if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
-  //       perror("socket creation failed"); 
-  //       exit(EXIT_FAILURE); 
-  //   } 
-      
-  //   memset(&servaddr, 0, sizeof(servaddr)); 
-  //   memset(&cliaddr, 0, sizeof(cliaddr)); 
-      
-  //   // Filling server information 
-  //   servaddr.sin_family    = AF_INET; // IPv4 
-  //   servaddr.sin_addr.s_addr = INADDR_ANY; 
-  //   servaddr.sin_port = htons(2600); 
-      
-  //   // Bind the socket with the server address 
-  //   if ( bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) 
-  //   { 
-  //       perror("bind failed"); 
-  //       exit(EXIT_FAILURE); 
-  //   } 
-      
-  //   int len, n; 
-  
-  //   len = sizeof(cliaddr);  //len is value/resuslt 
-  //   while(1){
-  //     n = recvfrom(sockfd, (char *)buffer, 100,  0, ( struct sockaddr *) &cliaddr, &len); 
-  //     buffer[n] = '\0'; 
-  //     printf("Client : %s\n", buffer); 
-  //     sendto(sockfd, (const char *)buffer, strlen(buffer), 0, (const struct sockaddr *) &cliaddr, len);
-  //   }
- 
-
-  // close(sockfd); 
-  
-  // vTaskDelay(2000);
-
   // Launch app thread when IP configured
-  
   osThreadAttr_t attributes;
   memset(&attributes, 0x0, sizeof(osThreadAttr_t));
   attributes.name = "app";
-  attributes.stack_size = 3000;
+  attributes.stack_size = 4*3000;
   attributes.priority = (osPriority_t) osPriorityNormal1;
   osThreadNew(appMain, NULL, &attributes);
 
   // Kill init thread
   // vTaskDelete(NULL);
 
+  char ptrTaskList[500];
+  vTaskList(ptrTaskList);
+  printf("**********************************\n");
+  printf("Task  State   Prio    Stack    Num\n"); 
+  printf("**********************************\n");
+  printf(ptrTaskList);
+  printf("**********************************\n");
+
   while (1){
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    osDelay(1000);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-    osDelay(1000);
+    osDelay(100);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+    osDelay(100);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+    osDelay(150);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+    osDelay(500);
   }
   
 

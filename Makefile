@@ -145,7 +145,8 @@ Middlewares/Third_Party/LwIP/src/core/ipv6/inet6.c \
 Middlewares/Third_Party/LwIP/system/OS/sys_arch.c \
 Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c \
 FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_utils.c \
-FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c
+FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c \
+Src/app.c
 
 # ASM sources
 ASM_SOURCES =  \
