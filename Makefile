@@ -22,7 +22,8 @@ TARGET = micro-ROS
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+# OPT = -Og
+OPT = -O0
 
 
 #######################################
@@ -142,7 +143,9 @@ Middlewares/Third_Party/LwIP/src/core/ipv6/mld6.c \
 Middlewares/Third_Party/LwIP/src/core/ipv6/ethip6.c \
 Middlewares/Third_Party/LwIP/src/core/ipv6/inet6.c \
 Middlewares/Third_Party/LwIP/system/OS/sys_arch.c \
-Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c
+Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c \
+FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_utils.c \
+FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -219,8 +222,14 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/LwIP/src/include/netif \
 -IMiddlewares/Third_Party/LwIP/src/include/posix \
 -IMiddlewares/Third_Party/LwIP/src/include/posix/sys \
--IMiddlewares/Third_Party/LwIP/system/arch
-
+-IMiddlewares/Third_Party/LwIP/system/arch \
+-I../crazyflie_extensions/bin/microxrcedds_client-1.2.1/include \
+-I../crazyflie_extensions/bin/microcdr-1.1.2/include \
+-IFreeRTOS-Plus-POSIX/include \
+-IFreeRTOS-Plus-POSIX/include/portable/empty_portable \
+-IFreeRTOS-Plus-POSIX/include/portable \
+-Iinclude \
+-Iinclude/private
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -256,6 +265,8 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 #######################################
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+OBJECTS += /workspaces/uros_ws_olimexfreertos/crazyflie_extensions/bin/microxrcedds_client-1.2.1/lib/libmicroxrcedds_client.a
+OBJECTS += /workspaces/uros_ws_olimexfreertos/crazyflie_extensions/bin/microcdr-1.1.2/lib/libmicrocdr.a
 vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))

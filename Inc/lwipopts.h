@@ -108,6 +108,12 @@
 /*-----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
 
+#define LWIP_SOCKET                     1
+#define LWIP_DNS                        1
+#define LWIP_SO_RCVTIMEO                1
+#define LWIP_SO_SNDTIMEO                1
+#define LWIP_DNS_API_DECLARE_STRUCTS    1
+
 /* USER CODE END 1 */
 
 #ifdef __cplusplus
