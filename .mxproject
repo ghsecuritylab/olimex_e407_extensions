@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=/home/pgarrido/olimexfreertos/micro-ROS/Inc
+HeaderPath=/home/pgarrido/uros_ws_olimexfreertos/cubeMX/Inc
 HeaderFiles=FreeRTOSConfig.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;lwip.h;lwipopts.h;ethernetif.h;gpio.h;usart.h;
-SourcePath=/home/pgarrido/olimexfreertos/micro-ROS/Src
+SourcePath=/home/pgarrido/uros_ws_olimexfreertos/cubeMX/Src
 SourceFiles=freertos.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_tim.c;main.c;lwip.c;ethernetif.c;gpio.c;usart.c;
 
 [PreviousLibFiles]

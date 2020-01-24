@@ -34,8 +34,6 @@
 #include <sys/socket.h>
 #include <ip_addr.h>
 
-#include "app.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -62,8 +60,8 @@ UART_HandleTypeDef huart3;
 osThreadId_t initTaskHandle;
 const osThreadAttr_t initTask_attributes = {
   .name = "initTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 500
+  .priority = (osPriority_t) osPriorityBelowNormal7,
+  .stack_size = 2000
 };
 /* USER CODE BEGIN PV */
 

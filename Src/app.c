@@ -33,7 +33,7 @@ void on_topic(uxrSession* session, uxrObjectId object_id, uint16_t request_id, u
 
     Point32 topic;
     Point32_deserialize_topic(ub, &topic);
-    
+
     printf("Received %d topic: %f %f %f\n", ++count, (int)topic.x, topic.y, topic.z);
 }
 
@@ -167,8 +167,8 @@ void appMain(void *argument){
     }
 
     float x     = 0.0;
-    float y     = 1.0;
-    float z     = 2.0;
+    float y     = 0.0;
+    float z     = 0.0;
 
     // Main loop
     while(1){
@@ -190,7 +190,7 @@ void appMain(void *argument){
         // Run session
         uxr_run_session_until_timeout(&session, 250);
 
-        vTaskDelay(250/portTICK_RATE_MS);
+        vTaskDelay(10/portTICK_RATE_MS);
     }
 
   uxr_delete_session(&session);
