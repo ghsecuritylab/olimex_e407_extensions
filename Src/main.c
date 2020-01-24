@@ -34,6 +34,8 @@
 #include <sys/socket.h>
 #include <ip_addr.h>
 
+#include "app.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -56,12 +58,12 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart3;
 
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+/* Definitions for initTask */
+osThreadId_t initTaskHandle;
+const osThreadAttr_t initTask_attributes = {
+  .name = "initTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 4*500
+  .stack_size = 500
 };
 /* USER CODE BEGIN PV */
 
@@ -71,7 +73,7 @@ const osThreadAttr_t defaultTask_attributes = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
-void StartDefaultTask(void *argument);
+void initTaskFunction(void *argument);
 
 /* USER CODE BEGIN PFP */
 #define BUFSIZE 4096
@@ -156,8 +158,8 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of initTask */
+  initTaskHandle = osThreadNew(initTaskFunction, NULL, &initTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -296,14 +298,14 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_initTaskFunction */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the initTask thread.
   * @param  argument: Not used 
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_initTaskFunction */
+void initTaskFunction(void *argument)
 {
   /* USER CODE BEGIN 5 */
   printf("Ethernet Initialization \r\n");
