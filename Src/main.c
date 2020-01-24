@@ -306,14 +306,14 @@ static void MX_GPIO_Init(void)
 void initTaskFunction(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  printf("Ethernet Initialization \r\n");
+  printf("Ethernet Initialization\r\n");
 	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_SET);
 	// MX_LWIP_Init();
 
 	//Waiting for an IP
+  printf("Waiting for IP\r\n");
 	while(gnetif.ip_addr.addr==0){
-	  printf("Waiting for IP\r\n");
-    osDelay(100);  
+    osDelay(500);  
   };
 
 	//Showing which IP was assigned
