@@ -237,4 +237,31 @@ int nanosleep( const struct timespec * rqtp,
     return iStatus;
 }
 
+
+// TODO(Pablo GS): Where is the place for this function of libc?
+
+time_t time(time_t *tloc)
+{
+  struct timespec ts;
+  int ret;
+
+  /* Get the current time from the system */
+
+  ret = clock_gettime(CLOCK_REALTIME, &ts);
+  if (ret == 0)
+    {
+      /* Return the seconds since the epoch */
+
+      if (tloc)
+        {
+          *tloc = ts.tv_sec;
+        }
+
+      return ts.tv_sec;
+    }
+
+  return (time_t)0;
+}
+
+
 /*-----------------------------------------------------------*/

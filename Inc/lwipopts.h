@@ -117,6 +117,7 @@
 #define LWIP_SO_RCVTIMEO                1
 #define LWIP_SO_SNDTIMEO                1
 #define LWIP_DNS_API_DECLARE_STRUCTS    1
+#define LWIP_TIMEVAL_PRIVATE            1
 
 /* USER CODE END 1 */
 

@@ -40,7 +40,7 @@ void on_topic(uxrSession* session, uxrObjectId object_id, uint16_t request_id, u
 void appMain(void *argument){
 
     // Micro-XRCE-DDS init transport and session
-    if(!uxr_init_udp_transport(&transport, &udp_platform, UXR_IPv4, "192.168.1.115", "8888")){
+    if(!uxr_init_udp_transport(&transport, &udp_platform, UXR_IPv4, "192.168.1.79", "8888")){
       printf("Error at create transport.\n");
       return 1;
     }

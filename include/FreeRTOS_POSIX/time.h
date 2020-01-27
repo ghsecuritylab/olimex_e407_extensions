@@ -33,6 +33,8 @@
 #ifndef _FREERTOS_POSIX_TIME_H_
 #define _FREERTOS_POSIX_TIME_H_
 
+#define _POSIX_TIMERS 1
+
 /* FreeRTOS+POSIX includes. */
 #include "FreeRTOS_POSIX/sys/types.h"
 #include "FreeRTOS_POSIX/signal.h"
@@ -254,5 +256,12 @@ int timer_settime( timer_t timerid,
                    int flags,
                    const struct itimerspec * value,
                    struct itimerspec * ovalue );
+
+
+
+// TODO(Pablo GS): Where is the place for this function of libc?
+
+time_t time(time_t *tloc);
+
 
 #endif /* ifndef _FREERTOS_POSIX_TIME_H_ */

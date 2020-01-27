@@ -20,10 +20,10 @@ TARGET = micro-ROS
 # building variables
 ######################################
 # debug build?
-DEBUG = 1
+DEBUG = 0
 # optimization
-# OPT = -Og
-OPT = -O0
+OPT = -Og
+# OPT = -O0
 
 
 #######################################
@@ -195,7 +195,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F407xx
+-DSTM32F407xx \
 
 
 # AS includes
@@ -224,13 +224,27 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/LwIP/src/include/posix \
 -IMiddlewares/Third_Party/LwIP/src/include/posix/sys \
 -IMiddlewares/Third_Party/LwIP/system/arch \
--I../crazyflie_extensions/bin/microxrcedds_client-1.2.1/include \
--I../crazyflie_extensions/bin/microcdr-1.1.2/include \
 -IFreeRTOS-Plus-POSIX/include \
 -IFreeRTOS-Plus-POSIX/include/portable/empty_portable \
 -IFreeRTOS-Plus-POSIX/include/portable \
 -Iinclude \
 -Iinclude/private
+
+PROJECTFOLDER = $(shell pwd)
+TOPFOLDER = $(PROJECTFOLDER)/../..
+UROS_DIR = $(TOPFOLDER)/mcu_ws
+EXTENSIONS_DIR = $(TOPFOLDER)/olimex_microros_extensions
+STM32_DIR = $(EXTENSIONS_DIR)/STM32
+
+MICROROS_INCLUDES += $(shell find $(UROS_DIR)/install -name 'include' | sed -E "s/(.*)/-I\1/")
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include/FreeRTOS_POSIX
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include/private
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include/portable
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include/portable/crazyflie
+MICROROS_INCLUDES += -I$(CRAZYFLIE_BASE)/src/lib/FreeRTOS/include
+C_INCLUDES += $(MICROROS_INCLUDES)
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -266,8 +280,8 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 #######################################
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
-OBJECTS += /workspaces/uros_ws_olimexfreertos/crazyflie_extensions/bin/microxrcedds_client-1.2.1/lib/libmicroxrcedds_client.a
-OBJECTS += /workspaces/uros_ws_olimexfreertos/crazyflie_extensions/bin/microcdr-1.1.2/lib/libmicrocdr.a
+OBJECTS += ../bin/libmicroros.a
+
 vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
