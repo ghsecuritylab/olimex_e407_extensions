@@ -23,7 +23,12 @@ TARGET = micro-ROS
 DEBUG ?= 1
 # optimization
 OPT = -Og
-# OPT = -O0
+
+ifeq ($(DEBUG), 1)
+  	BUILD_TYPE = Debug
+else
+	BUILD_TYPE = Release
+endif
 
 
 #######################################
@@ -31,10 +36,9 @@ OPT = -Og
 #######################################
 # Build path
 PROJECTFOLDER = $(shell pwd)
-TOPFOLDER = $(PROJECTFOLDER)/../..
+TOPFOLDER = $(PROJECTFOLDER)/..
 UROS_DIR = $(TOPFOLDER)/mcu_ws
 EXTENSIONS_DIR = $(TOPFOLDER)/olimex_microros_extensions
-STM32_DIR = $(EXTENSIONS_DIR)/STM32
 BUILD_DIR = $(PROJECTFOLDER)/build
 
 ######################################
@@ -251,6 +255,25 @@ MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include/portable/cr
 MICROROS_INCLUDES += -I$(CRAZYFLIE_BASE)/src/lib/FreeRTOS/include
 C_INCLUDES += $(MICROROS_INCLUDES)
 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/include 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/private 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/FreeRTOS_POSIX 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/FreeRTOS_POSIX/sys
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/hal/interface 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/modules/interface 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/utils/interface 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/config 
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/drivers/interface
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/posix
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Inc
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Drivers/STM32F4xx_HAL_Driver/Inc
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Drivers/CMSIS/Device/ST/STM32F4xx/Include
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Drivers/CMSIS/Include
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/system
+COLCON_INCLUDES_STR := $(foreach x,$(COLCON_INCLUDES),$(x)\n)
+
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
@@ -260,10 +283,10 @@ ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
 
-
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
+ARCHCPUFLAGS = $(MCU) $(C_DEFS) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 #######################################
 # LDFLAGS
@@ -279,13 +302,52 @@ LDFLAGS = $(MCU) --specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
+#######################################
+# build the micro-ROS
+#######################################
+
+arm_toolchain: $(EXTENSIONS_DIR)/arm_toolchain.cmake.in
+	rm -f $(EXTENSIONS_DIR)/arm_toolchain.cmake; \
+	cat $(EXTENSIONS_DIR)/arm_toolchain.cmake.in | \
+		sed "s/@CROSS_COMPILE_PREFIX@/$(subst /,\/,$(CROSS_COMPILE_PREFIX))/g" | \
+		sed "s/@FREERTOS_TOPDIR@/$(subst /,\/,$(TOPFOLDER))/g" | \
+		sed "s/@ARCH_CPU_FLAGS@/\"$(ARCHCPUFLAGS)\"/g" | \
+		sed "s/@ARCH_OPT_FLAGS@/\"$(ARCHOPTIMIZATION)\"/g" | \
+		sed "s/@INCLUDES@/$(subst /,\/,$(COLCON_INCLUDES_STR))/g" \
+		> $(EXTENSIONS_DIR)/arm_toolchain.cmake
+
+colcon_compile: arm_toolchain
+	cd $(UROS_DIR); \
+	colcon build \
+		--packages-ignore-regex=.*_cpp \
+		--cmake-args \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=OFF \
+		-DTHIRDPARTY=ON \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DBUILD_TESTING=OFF \
+		-DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
+		-DCMAKE_TOOLCHAIN_FILE=$(EXTENSIONS_DIR)/arm_toolchain.cmake \
+		-DCMAKE_VERBOSE_MAKEFILE=ON; \
+
+libmicroros: colcon_compile
+	mkdir -p $(UROS_DIR)/libmicroros; cd $(UROS_DIR)/libmicroros; \
+	for file in $$(find $(UROS_DIR)/install/ -name '*.a'); do \
+		folder=$$(echo $$file | sed -E "s/(.+)\/(.+).a/\2/"); \
+		mkdir -p $$folder; cd $$folder; ar x $$file; \
+		for f in *; do \
+			mv $$f ../$$folder-$$f; \
+		done; \
+		cd ..; rm -rf $$folder; \
+	done ; \
+	ar rc libmicroros.a *.obj; cp libmicroros.a $(BUILD_DIR); ranlib $(BUILD_DIR)/libmicroros.a; \
+	cd ..; rm -rf libmicroros;
 
 #######################################
 # build the application
 #######################################
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
-OBJECTS += ../bin/libmicroros.a
+OBJECTS += $(BUILD_DIR)/libmicroros.a
 
 vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
