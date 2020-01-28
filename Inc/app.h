@@ -1,16 +1,6 @@
-#ifndef __APP_H
-#define __APP_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
 void appMain(void *argument);
 
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __APP_H */
-
+#endif // _MAIN_H_

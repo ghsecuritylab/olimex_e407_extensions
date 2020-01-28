@@ -1,3 +1,5 @@
+#include <allocators.h>
+
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
 #include <std_msgs/msg/int32.h>
@@ -22,7 +24,22 @@ void * trigger_guard_condition(void *args){
 
 void appMain(void *argument)
 {
+  
+  printf("Free heap pre uROS: %d bytes\n", xPortGetFreeHeapSize());
+
   rcl_init_options_t options = rcl_get_zero_initialized_init_options();
+
+  rcl_allocator_t freeRTOS_allocator = rcutils_get_zero_initialized_allocator();
+  freeRTOS_allocator.allocate = __freertos_allocate;
+  freeRTOS_allocator.deallocate = __freertos_deallocate;
+  freeRTOS_allocator.reallocate = __freertos_reallocate;
+  freeRTOS_allocator.zero_allocate = __freertos_zero_allocate;
+
+  if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
+      printf("Error on default allocators (line %d)\n",__LINE__); 
+      vTaskSuspend( NULL );
+  }
+
   RCCHECK(rcl_init_options_init(&options, rcl_get_default_allocator()))
 
   rcl_context_t context = rcl_get_zero_initialized_context();
@@ -55,28 +72,39 @@ void appMain(void *argument)
   const int num_msg = 1000;
   msg.data = 0;
   
-  
+  printf("Free heap post uROS configuration: %d bytes\n", xPortGetFreeHeapSize());
+  printf("uROS Used Memory %d bytes\n", usedMemory);
+  printf("uROS Absolute Used Memory %d bytes\n", absoluteUsedMemory);
+
   sleep(2); // Sleep a while to ensure DDS matching before sending request
 
   rcl_ret_t rc;
   do {
-    rc = rcl_publish(&publisher, (const void*)&msg, NULL);
-    if (RCL_RET_OK == rc ) {
-        printf("Sent: '%i'\n", msg.data++);
-    }
-
     RCSOFTCHECK(rcl_wait_set_clear(&wait_set))
     
-    size_t index;
-    RCSOFTCHECK(rcl_wait_set_add_subscription(&wait_set, &subscription, &index))
-    
-    RCSOFTCHECK(rcl_wait(&wait_set, RCL_MS_TO_NS(10)))
+    size_t index_subscription;
+    RCSOFTCHECK(rcl_wait_set_add_subscription(&wait_set, &subscription, &index_subscription))
 
-    if (wait_set.subscriptions[index]) {
+    size_t index_guardcondition;
+    RCSOFTCHECK(rcl_wait_set_add_guard_condition(&wait_set, &guard_condition, &index_guardcondition))
+    
+    RCSOFTCHECK(rcl_wait(&wait_set, RCL_MS_TO_NS(100)))
+
+    if (wait_set.subscriptions[index_subscription]) {
       std_msgs__msg__Int32 msg;
-      rc = rcl_take(wait_set.subscriptions[index], &msg, NULL, NULL);
+
+      rc = rcl_take(wait_set.subscriptions[index_subscription], &msg, NULL, NULL);
       if (RCL_RET_OK == rc) {
         printf("I received: [%i]\n", msg.data);
+      }
+    }
+
+    if (wait_set.guard_conditions[index_guardcondition]) {
+      // Use the guard condition trigger to publish in a slower loop
+
+      rc = rcl_publish(&publisher, (const void*)&msg, NULL);
+      if (RCL_RET_OK == rc ) {
+          printf("Sent: '%i'\n", msg.data++);
       }
     }
 

@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 #include "cmsis_os.h"
 #include "lwip.h"
 
@@ -61,7 +60,7 @@ osThreadId_t initTaskHandle;
 const osThreadAttr_t initTask_attributes = {
   .name = "initTask",
   .priority = (osPriority_t) osPriorityBelowNormal7,
-  .stack_size = 2000
+  .stack_size = 1000
 };
 /* USER CODE BEGIN PV */
 
@@ -312,18 +311,23 @@ void initTaskFunction(void *argument)
 
 	//Waiting for an IP
   printf("Waiting for IP\r\n");
-	while(gnetif.ip_addr.addr==0){
+  int retries = 0;
+	while(gnetif.ip_addr.addr == 0 && retries < 10){
     osDelay(500);  
+    retries++;
   };
 
-	//Showing which IP was assigned
-	printf("IP: %s\r\n",ip4addr_ntoa(&gnetif.ip_addr));
-
+  bool availableNetwork = (gnetif.ip_addr.addr != 0);
+  if (availableNetwork){
+    printf("IP: %s\r\n",ip4addr_ntoa(&gnetif.ip_addr));
+  }else{
+    printf("Impossible to retrieve an IP\n");
+  }
 
   // Launch app thread when IP configured
   osThreadAttr_t attributes;
   memset(&attributes, 0x0, sizeof(osThreadAttr_t));
-  attributes.name = "app";
+  attributes.name = "microROS_app";
   attributes.stack_size = 4*3000;
   attributes.priority = (osPriority_t) osPriorityNormal1;
   osThreadNew(appMain, NULL, &attributes);
@@ -331,6 +335,7 @@ void initTaskFunction(void *argument)
   // Kill init thread
   // vTaskDelete(NULL);
 
+  osDelay(500);
   char ptrTaskList[500];
   vTaskList(ptrTaskList);
   printf("**********************************\n");
@@ -339,15 +344,25 @@ void initTaskFunction(void *argument)
   printf(ptrTaskList);
   printf("**********************************\n");
 
+  TaskHandle_t xHandle;
+  xHandle = xTaskGetHandle("microROS_app");
+
   while (1){
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-    osDelay(100);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    osDelay(100);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-    osDelay(150);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    osDelay(500);
+    if (eTaskGetState(xHandle) != eSuspended && availableNetwork){
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+      osDelay(100);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+      osDelay(100);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+      osDelay(150);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+      osDelay(500);
+    }else{
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+      osDelay(1000);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+      osDelay(1000);
+    }
   }
   
 

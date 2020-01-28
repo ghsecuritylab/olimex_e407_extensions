@@ -20,7 +20,7 @@ TARGET = micro-ROS
 # building variables
 ######################################
 # debug build?
-DEBUG = 0
+DEBUG ?= 1
 # optimization
 OPT = -Og
 # OPT = -O0
@@ -30,7 +30,12 @@ OPT = -Og
 # paths
 #######################################
 # Build path
-BUILD_DIR = build
+PROJECTFOLDER = $(shell pwd)
+TOPFOLDER = $(PROJECTFOLDER)/../..
+UROS_DIR = $(TOPFOLDER)/mcu_ws
+EXTENSIONS_DIR = $(TOPFOLDER)/olimex_microros_extensions
+STM32_DIR = $(EXTENSIONS_DIR)/STM32
+BUILD_DIR = $(PROJECTFOLDER)/build
 
 ######################################
 # source
@@ -66,7 +71,6 @@ Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c \
 Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
 Middlewares/Third_Party/FreeRTOS/Source/timers.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
 Src/lwip.c \
 Src/ethernetif.c \
@@ -146,7 +150,13 @@ Middlewares/Third_Party/LwIP/system/OS/sys_arch.c \
 Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c \
 FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_utils.c \
 FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c \
-Src/app.c
+FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_sched.c \
+FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_unistd.c \
+FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c \
+Src/custom_memory_manager.c \
+Src/libatomic.c \
+Src/allocators.c \
+Src/app.c 
 
 # ASM sources
 ASM_SOURCES =  \
@@ -156,19 +166,20 @@ startup_stm32f407xx.s
 #######################################
 # binaries
 #######################################
-PREFIX = arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
+CROSS_COMPILE_PREFIX = $(TOPFOLDER)/toolchain/bin/arm-none-eabi-
+
 ifdef GCC_PATH
-CC = $(GCC_PATH)/$(PREFIX)gcc
-AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
-CP = $(GCC_PATH)/$(PREFIX)objcopy
-SZ = $(GCC_PATH)/$(PREFIX)size
+CC = $(GCC_PATH)/$(CROSS_COMPILE_PREFIX)gcc
+AS = $(GCC_PATH)/$(CROSS_COMPILE_PREFIX)gcc -x assembler-with-cpp
+CP = $(GCC_PATH)/$(CROSS_COMPILE_PREFIX)objcopy
+SZ = $(GCC_PATH)/$(CROSS_COMPILE_PREFIX)size
 else
-CC = $(PREFIX)gcc
-AS = $(PREFIX)gcc -x assembler-with-cpp
-CP = $(PREFIX)objcopy
-SZ = $(PREFIX)size
+CC = $(CROSS_COMPILE_PREFIX)gcc
+AS = $(CROSS_COMPILE_PREFIX)gcc -x assembler-with-cpp
+CP = $(CROSS_COMPILE_PREFIX)objcopy
+SZ = $(CROSS_COMPILE_PREFIX)size
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
@@ -196,7 +207,7 @@ AS_DEFS =
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
 -DSTM32F407xx \
-
+-D_TIMEVAL_DEFINED
 
 # AS includes
 AS_INCLUDES =  \
@@ -229,12 +240,6 @@ C_INCLUDES =  \
 -IFreeRTOS-Plus-POSIX/include/portable \
 -Iinclude \
 -Iinclude/private
-
-PROJECTFOLDER = $(shell pwd)
-TOPFOLDER = $(PROJECTFOLDER)/../..
-UROS_DIR = $(TOPFOLDER)/mcu_ws
-EXTENSIONS_DIR = $(TOPFOLDER)/olimex_microros_extensions
-STM32_DIR = $(EXTENSIONS_DIR)/STM32
 
 MICROROS_INCLUDES += $(shell find $(UROS_DIR)/install -name 'include' | sed -E "s/(.*)/-I\1/")
 MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include
@@ -269,7 +274,7 @@ LDSCRIPT = STM32F407ZGTx_FLASH.ld
 # libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) --specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
