@@ -75,6 +75,7 @@ Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
 Middlewares/Third_Party/FreeRTOS/Source/timers.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
+Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
 Src/lwip.c \
 Src/ethernetif.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_eth.c \
@@ -159,7 +160,12 @@ FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c \
 Src/custom_memory_manager.c \
 Src/libatomic.c \
 Src/allocators.c \
-Src/app.c 
+Src/app.c \
+
+# Removing heap4 manager while being polite with STM32CubeMX
+TMPVAR := $(C_SOURCES)
+C_SOURCES = $(filter-out Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c, $(TMPVAR))
+
 
 # ASM sources
 ASM_SOURCES =  \
