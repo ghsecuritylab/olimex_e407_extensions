@@ -302,7 +302,7 @@ LDFLAGS = $(MCU) --specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
 #######################################
-# build the micro-ROS
+# build micro-ROS
 #######################################
 
 arm_toolchain: $(EXTENSIONS_DIR)/arm_toolchain.cmake.in
@@ -338,7 +338,7 @@ libmicroros: colcon_compile
 		done; \
 		cd ..; rm -rf $$folder; \
 	done ; \
-	ar rc libmicroros.a *.obj; cp libmicroros.a $(BUILD_DIR); ranlib $(BUILD_DIR)/libmicroros.a; \
+	ar rc libmicroros.a *.obj; mkdir -p $(BUILD_DIR); cp libmicroros.a $(BUILD_DIR); ranlib $(BUILD_DIR)/libmicroros.a; \
 	cd ..; rm -rf libmicroros;
 
 #######################################
