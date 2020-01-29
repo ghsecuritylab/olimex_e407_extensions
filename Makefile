@@ -35,11 +35,10 @@ endif
 # paths
 #######################################
 # Build path
-PROJECTFOLDER = $(shell pwd)
-TOPFOLDER = $(PROJECTFOLDER)/..
+EXTENSIONS_DIR = $(shell pwd)
+TOPFOLDER = $(EXTENSIONS_DIR)/..
 UROS_DIR = $(TOPFOLDER)/mcu_ws
-EXTENSIONS_DIR = $(TOPFOLDER)/olimex_microros_extensions
-BUILD_DIR = $(PROJECTFOLDER)/build
+BUILD_DIR = $(EXTENSIONS_DIR)/build
 
 ######################################
 # source
