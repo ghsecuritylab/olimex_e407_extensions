@@ -381,7 +381,8 @@ $(BUILD_DIR):
 # clean up
 #######################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	-rm -fR $(BUILD_DIR); \
+	rm -rf $(UROS_DIR)/log $(UROS_DIR)/install $(UROS_DIR)/build 
   
 #######################################
 # dependencies
