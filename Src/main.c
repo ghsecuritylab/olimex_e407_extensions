@@ -58,6 +58,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart3_rx;
+DMA_HandleTypeDef hdma_usart3_tx;
 
 /* Definitions for initTask */
 osThreadId_t initTaskHandle;
@@ -93,7 +94,7 @@ int __io_putchar(int ch)
 {
  uint8_t c[1];
  c[0] = ch & 0x00FF;
- HAL_UART_Transmit(&huart3, &c[0], 1, 10);
+//  HAL_UART_Transmit(&huart3, &c[0], 1, 10);
  return ch;
 }
 
@@ -343,6 +344,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+  /* DMA1_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
 
 }
 
