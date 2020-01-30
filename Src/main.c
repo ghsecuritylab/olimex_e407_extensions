@@ -380,7 +380,6 @@ void initTaskFunction(void *argument)
   /* USER CODE BEGIN 5 */
   printf("Ethernet Initialization\r\n");
 	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_SET);
-	// MX_LWIP_Init();
 
 	//Waiting for an IP
   printf("Waiting for IP\r\n");
