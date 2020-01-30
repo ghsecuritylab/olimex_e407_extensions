@@ -22,11 +22,12 @@ TARGET = micro-ROS
 # debug build?
 DEBUG ?= 1
 # optimization
-OPT = -Og
 
 ifeq ($(DEBUG), 1)
+	OPT = -O0
   	BUILD_TYPE = Debug
 else
+	OPT = -Og
 	BUILD_TYPE = Release
 endif
 
