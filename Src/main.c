@@ -86,6 +86,7 @@ void initTaskFunction(void *argument);
 #define BUFSIZE 4096
 char buffer[BUFSIZE];
 extern struct netif gnetif;
+UART_HandleTypeDef * printf_uart;
 // extern appMain;
 
 /* USER CODE END PFP */
@@ -96,17 +97,7 @@ int __io_putchar(int ch)
 {
   uint8_t c[1];
   c[0] = ch & 0x00FF;
-
-#ifdef MICRO_XRCEDDS_UDP
-  HAL_UART_Transmit(&huart3, &c[0], 1, 10);
-#elif defined(MICRO_XRCEDDS_CUSTOM)
-  #if RMW_UXRCE_DEFAULT_SERIAL_DEVICE == "3"
-    HAL_UART_Transmit(&huart6, &c[0], 1, 10);
-  #else
-    HAL_UART_Transmit(&huart3, &c[0], 1, 10);
-  #endif
-#endif
-
+  HAL_UART_Transmit(printf_uart, &c[0], 1, 10);
   return ch;
 }
 
@@ -127,7 +118,15 @@ int _write(int file,char *ptr, int len)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+#ifdef MICRO_XRCEDDS_UDP
+  printf_uart = &huart3;
+#elif defined(MICRO_XRCEDDS_CUSTOM)
+  if (strcmp("3",RMW_UXRCE_DEFAULT_SERIAL_DEVICE)){
+    printf_uart = &huart6;
+  }else{
+    printf_uart = &huart3;
+  }
+#endif
   /* USER CODE END 1 */
   
 
