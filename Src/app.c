@@ -76,8 +76,6 @@ void appMain(void *argument)
   printf("uROS Used Memory %d bytes\n", usedMemory);
   printf("uROS Absolute Used Memory %d bytes\n", absoluteUsedMemory);
 
-  sleep(2); // Sleep a while to ensure DDS matching before sending request
-
   rcl_ret_t rc;
   do {
     RCSOFTCHECK(rcl_wait_set_clear(&wait_set))
