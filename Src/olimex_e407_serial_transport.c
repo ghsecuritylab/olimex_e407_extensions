@@ -42,32 +42,33 @@ size_t uxr_write_serial_data_platform(uxrSerialPlatform* platform, uint8_t* buf,
 {
   
   HAL_StatusTypeDef ret;
-  // ret = HAL_UART_Transmit(platform->uart, buf, len, 1000);
 
-  ret = HAL_UART_Transmit_DMA(platform->uart, buf, len);
-  while (ret == HAL_OK && platform->uart->gState != HAL_UART_STATE_READY){
-    osDelay(1);
+  if (platform->uart->gState == HAL_UART_STATE_READY){
+    ret = HAL_UART_Transmit_DMA(platform->uart, buf, len);
+    while (ret == HAL_OK && platform->uart->gState != HAL_UART_STATE_READY){
+      osDelay(1);
+    }
+
+    return (ret == HAL_OK) ? len : 0;
+  }else{
+    return 0;
   }
-
-  return (ret == HAL_OK) ? len : 0;
 }
 
 size_t uxr_read_serial_data_platform(uxrSerialPlatform* platform, uint8_t* buf, size_t len, int timeout, uint8_t* errcode)
 { 
-  size_t wrote = 0;
   osDelay(timeout);
 
   __disable_irq();
   dma_tail = UART_DMA_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(platform->uart->hdmarx);
   __enable_irq();
 
-  if (((dma_head + len) % UART_DMA_BUFFER_SIZE) <= dma_tail){ // Buffer has more or eq data than required
-    wrote = len;
-  }else if (((dma_head + len) % UART_DMA_BUFFER_SIZE) > dma_tail){ // Buffer has less data than required
-    wrote = dma_tail - dma_head;
+  size_t wrote = 0;
+  while ((dma_head != dma_tail) && (wrote < len)){
+    buf[wrote] = dma_buffer[dma_head];
+    dma_head = (dma_head + 1) % UART_DMA_BUFFER_SIZE;
+    wrote++;
   }
-  memcpy(buf, &dma_buffer[dma_head],wrote);
-  dma_head += wrote;
-  
+ 
   return wrote;
 }
