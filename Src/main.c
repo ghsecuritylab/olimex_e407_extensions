@@ -86,7 +86,7 @@ void initTaskFunction(void *argument);
 #define BUFSIZE 4096
 char buffer[BUFSIZE];
 extern struct netif gnetif;
-UART_HandleTypeDef * printf_uart;
+UART_HandleTypeDef * printf_uart = NULL;
 // extern appMain;
 
 /* USER CODE END PFP */
@@ -97,7 +97,9 @@ int __io_putchar(int ch)
 {
   uint8_t c[1];
   c[0] = ch & 0x00FF;
-  HAL_UART_Transmit(printf_uart, &c[0], 1, 10);
+  if (printf_uart != NULL){
+     HAL_UART_Transmit(printf_uart, &c[0], 1, 10);
+  }
   return ch;
 }
 
@@ -118,15 +120,7 @@ int _write(int file,char *ptr, int len)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-#ifdef MICRO_XRCEDDS_UDP
-  printf_uart = &huart3;
-#elif defined(MICRO_XRCEDDS_CUSTOM)
-  if (strcmp("3",RMW_UXRCE_DEFAULT_SERIAL_DEVICE)){
-    printf_uart = &huart6;
-  }else{
-    printf_uart = &huart3;
-  }
-#endif
+
   /* USER CODE END 1 */
   
 
@@ -154,6 +148,16 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+
+#ifdef MICRO_XRCEDDS_UDP
+  printf_uart = &huart3;
+#elif defined(MICRO_XRCEDDS_CUSTOM)
+  if (!strcmp("3",RMW_UXRCE_DEFAULT_SERIAL_DEVICE)){
+    printf_uart = &huart6;
+  }else{
+    printf_uart = &huart3;
+  }
+#endif
 
   /* USER CODE END 2 */
   /* Init scheduler */
