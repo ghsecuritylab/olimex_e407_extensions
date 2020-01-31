@@ -37,6 +37,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include <rmw_microxrcedds_c/config.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,20 +94,24 @@ extern struct netif gnetif;
 /* USER CODE BEGIN 0 */
 int __io_putchar(int ch)
 {
- uint8_t c[1];
- c[0] = ch & 0x00FF;
-//  HAL_UART_Transmit(&huart3, &c[0], 1, 10);
- return ch;
+  uint8_t c[1];
+  c[0] = ch & 0x00FF;
+
+#ifdef MICRO_XRCEDDS_UDP
+  HAL_UART_Transmit(&huart3, &c[0], 1, 10);
+#elif defined(MICRO_XRCEDDS_CUSTOM)
+  HAL_UART_Transmit(&huart6, &c[0], 1, 10);
+#endif
+  return ch;
 }
 
 int _write(int file,char *ptr, int len)
 {
- int DataIdx;
- for(DataIdx= 0; DataIdx< len; DataIdx++)
- {
- __io_putchar(*ptr++);
- }
-return len;
+  int DataIdx;
+  for(DataIdx= 0; DataIdx< len; DataIdx++){
+  __io_putchar(*ptr++);
+  }
+  return len;
 }
 /* USER CODE END 0 */
 
@@ -401,8 +407,13 @@ static void MX_GPIO_Init(void)
 void initTaskFunction(void *argument)
 {
   /* USER CODE BEGIN 5 */
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_SET);
+  bool availableNetwork = false;
+
+#ifdef MICRO_XRCEDDS_CUSTOM
+  availableNetwork = true;
+#elif defined(MICRO_XRCEDDS_UDP)
   printf("Ethernet Initialization\r\n");
-	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, GPIO_PIN_SET);
 
 	//Waiting for an IP
   printf("Waiting for IP\r\n");
@@ -412,12 +423,13 @@ void initTaskFunction(void *argument)
     retries++;
   };
 
-  bool availableNetwork = (gnetif.ip_addr.addr != 0);
+  availableNetwork = (gnetif.ip_addr.addr != 0);
   if (availableNetwork){
     printf("IP: %s\r\n",ip4addr_ntoa(&gnetif.ip_addr));
   }else{
     printf("Impossible to retrieve an IP\n");
   }
+#endif
 
   // Launch app thread when IP configured
   osThreadAttr_t attributes;
@@ -426,9 +438,6 @@ void initTaskFunction(void *argument)
   attributes.stack_size = 4*3000;
   attributes.priority = (osPriority_t) osPriorityNormal1;
   osThreadNew(appMain, NULL, &attributes);
-
-  // Kill init thread
-  // vTaskDelete(NULL);
 
   osDelay(500);
   char ptrTaskList[500];
