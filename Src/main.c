@@ -100,8 +100,13 @@ int __io_putchar(int ch)
 #ifdef MICRO_XRCEDDS_UDP
   HAL_UART_Transmit(&huart3, &c[0], 1, 10);
 #elif defined(MICRO_XRCEDDS_CUSTOM)
-  HAL_UART_Transmit(&huart6, &c[0], 1, 10);
+  #if RMW_UXRCE_DEFAULT_SERIAL_DEVICE == "3"
+    HAL_UART_Transmit(&huart6, &c[0], 1, 10);
+  #else
+    HAL_UART_Transmit(&huart3, &c[0], 1, 10);
+  #endif
 #endif
+
   return ch;
 }
 
