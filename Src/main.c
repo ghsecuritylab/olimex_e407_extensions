@@ -69,7 +69,7 @@ osThreadId_t initTaskHandle;
 const osThreadAttr_t initTask_attributes = {
   .name = "initTask",
   .priority = (osPriority_t) osPriorityBelowNormal7,
-  .stack_size = 1000
+  .stack_size = 1500
 };
 /* USER CODE BEGIN PV */
 
