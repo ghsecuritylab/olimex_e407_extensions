@@ -28,6 +28,8 @@
 #include "stm32f4xx_hal.h"
 #include "api.h"
 
+#include <allocators.h>
+#include <rcl/rcl.h>
 #include <uxr/client/client.h>
 #include <ucdr/microcdr.h>
 
@@ -440,6 +442,16 @@ void initTaskFunction(void *argument)
 #endif
 
   // Launch app thread when IP configured
+  rcl_allocator_t freeRTOS_allocator = rcutils_get_zero_initialized_allocator();
+  freeRTOS_allocator.allocate = __freertos_allocate;
+  freeRTOS_allocator.deallocate = __freertos_deallocate;
+  freeRTOS_allocator.reallocate = __freertos_reallocate;
+  freeRTOS_allocator.zero_allocate = __freertos_zero_allocate;
+
+  if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
+      printf("Error on default allocators (line %d)\n",__LINE__); 
+  }
+
   osThreadAttr_t attributes;
   memset(&attributes, 0x0, sizeof(osThreadAttr_t));
   attributes.name = "microROS_app";

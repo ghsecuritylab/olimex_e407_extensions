@@ -31,17 +31,6 @@ void appMain(void *argument)
 
   rcl_init_options_t options = rcl_get_zero_initialized_init_options();
 
-  rcl_allocator_t freeRTOS_allocator = rcutils_get_zero_initialized_allocator();
-  freeRTOS_allocator.allocate = __freertos_allocate;
-  freeRTOS_allocator.deallocate = __freertos_deallocate;
-  freeRTOS_allocator.reallocate = __freertos_reallocate;
-  freeRTOS_allocator.zero_allocate = __freertos_zero_allocate;
-
-  if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
-      printf("Error on default allocators (line %d)\n",__LINE__); 
-      vTaskSuspend( NULL );
-  }
-
   RCCHECK(rcl_init_options_init(&options, rcl_get_default_allocator()))
 
   // Optional RMW configuration 
