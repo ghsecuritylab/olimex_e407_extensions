@@ -1,8 +1,10 @@
 #include <allocators.h>
 
 #include <rcl/rcl.h>
+#include <rcl_action/rcl_action.h>
 #include <rcl/error_handling.h>
 #include <std_msgs/msg/int32.h>
+#include "example_interfaces/srv/add_two_ints.h"
 
 #include <rmw_uros/options.h>
 
@@ -42,6 +44,10 @@ void appMain(void *argument)
 
   RCCHECK(rcl_init_options_init(&options, rcl_get_default_allocator()))
 
+  // Optional RMW configuration 
+  rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&options);
+  RCCHECK(rmw_uros_options_set_client_key(0xBA5EBA11, rmw_options))
+
   rcl_context_t context = rcl_get_zero_initialized_context();
   RCCHECK(rcl_init(0, NULL, &options, &context))
 
@@ -65,8 +71,15 @@ void appMain(void *argument)
   pthread_t guard_condition_thread;
   pthread_create(&guard_condition_thread, NULL, trigger_guard_condition, &guard_condition);
 
+  const char * service_name = "addtwoints";
+  rcl_service_options_t service_op = rcl_service_get_default_options();
+  rcl_service_t serv = rcl_get_zero_initialized_service();
+  const rosidl_service_type_support_t * service_type_support = ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
+
+  RCCHECK(rcl_service_init(&serv, &node, service_type_support, service_name, &service_op))
+
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  RCCHECK(rcl_wait_set_init(&wait_set, 1, 1, 0, 0, 0, 0, &context, rcl_get_default_allocator()))
+  RCCHECK(rcl_wait_set_init(&wait_set, 1, 1, 0, 0, 1, 0, &context, rcl_get_default_allocator()))
 
   std_msgs__msg__Int32 msg;
   const int num_msg = 1000;
@@ -85,6 +98,9 @@ void appMain(void *argument)
 
     size_t index_guardcondition;
     RCSOFTCHECK(rcl_wait_set_add_guard_condition(&wait_set, &guard_condition, &index_guardcondition))
+
+    size_t index_service;
+    RCSOFTCHECK(rcl_wait_set_add_service(&wait_set, &serv, &index_service))
     
     RCSOFTCHECK(rcl_wait(&wait_set, RCL_MS_TO_NS(100)))
 
@@ -106,6 +122,21 @@ void appMain(void *argument)
       }
     }
 
+    if (wait_set.services[index_service]) {   
+      rmw_request_id_t req_id;
+      example_interfaces__srv__AddTwoInts_Request req;
+      example_interfaces__srv__AddTwoInts_Request__init(&req);
+      RCSOFTCHECK(rcl_take_request(&serv,&req_id,&req))
+
+      printf("Service request value: %d + %d. Seq %d\n", (int)req.a, (int)req.b, (int) req_id.sequence_number);
+
+      example_interfaces__srv__AddTwoInts_Response res;
+      example_interfaces__srv__AddTwoInts_Response__init(&res);
+      
+      res.sum = req.a + req.b;
+
+      RCSOFTCHECK(rcl_send_response(&serv,&req_id,&res))
+    }
     usleep(10000);
   } while (true );
   printf("TOTAL sent: %i\n", num_msg);
